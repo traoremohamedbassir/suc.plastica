@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "457793812221",
+    "project_id": "plastica-suc",
+    "storage_bucket": "plastica-suc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:457793812221:android:8b44a813a5480504253094",
+        "android_client_info": {
+          "package_name": "com.example.plastica_suc"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDq4ZJERi9mFhr1wYvXqPyyqshxy_5Bhp0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
