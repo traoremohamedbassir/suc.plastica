@@ -13,13 +13,14 @@ class _RegisterState extends State<Register> {
   TextEditingController passwordController = TextEditingController();
   TextEditingController emailController = TextEditingController();
   TextEditingController nameController = TextEditingController();
-
+final _formKey = GlobalKey<FormState>();
   String selectedRole = "Caissier";
   bool isloading = false;
   bool isPasswordHidden = true;
   //
   final AuthService _authService = AuthService();
   void _signup() async {
+    if (!_formKey.currentState!.validate()) return;
     setState(() {
       isloading = true;
     });
@@ -76,20 +77,7 @@ class _RegisterState extends State<Register> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
-                    // Container(
-                    //   width: 62,
-                    //   height: 62,
-                    //   decoration: BoxDecoration(
-                    //     color: const Color(0xFF10B981).withOpacity(0.12),
-                    //     borderRadius: BorderRadius.circular(18),
-                    //   ),
-                    //   child: const Icon(
-                    //     Icons.person_add_alt_1_outlined,
-                    //     size: 32,
-                    //     color: Color(0xFF10B981),
-                    //   ),
-                    // ),
+                   
                     const SizedBox(height: 22),
                     const Text(
                       'Créer un compte',
@@ -108,6 +96,10 @@ class _RegisterState extends State<Register> {
                       ),
                     ),
                     const SizedBox(height: 28),
+                Form(
+                      key: _formKey,
+                      child: Column(
+                      children: [
                     TextFormField(
                       controller: nameController,
                       decoration: InputDecoration(
@@ -132,6 +124,10 @@ class _RegisterState extends State<Register> {
                           ),
                         ),
                       ),
+                        validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'nom est requis';
+                    return null;
+                  },
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -159,6 +155,10 @@ class _RegisterState extends State<Register> {
                           ),
                         ),
                       ),
+                        validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'email est requis';
+                    return null;
+                  },
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -198,6 +198,10 @@ class _RegisterState extends State<Register> {
                           ),
                         ),
                       ),
+                        validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'password est requis';
+                    return null;
+                  },
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
@@ -233,6 +237,9 @@ class _RegisterState extends State<Register> {
                           selectedRole = newValue ?? 'Caissier';
                         });
                       },
+                    ),
+                      ]
+                      ),
                     ),
                     const SizedBox(height: 28),
                     isloading

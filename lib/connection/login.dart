@@ -22,7 +22,7 @@ final _formKey = GlobalKey<FormState>();
   //
   final AuthService _auth = AuthService();
   void login() async {
-      // if (!_formKey.currentState!.validate()) return;
+      if (!_formKey.currentState!.validate()) return;
     setState(() {
       isloading = true;
     });
@@ -79,20 +79,7 @@ final _formKey = GlobalKey<FormState>();
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 12),
-                    // Container(
-                    //   width: 62,
-                    //   height: 62,
-                    //   decoration: BoxDecoration(
-                    //     color: const Color(0xFF0EA5E9).withOpacity(0.12),
-                    //     borderRadius: BorderRadius.circular(18),
-                    //   ),
-                    //   child: const Icon(
-                    //     Icons.lock_outline_rounded,
-                    //     size: 32,
-                    //     color: Color(0xFF0EA5E9),
-                    //   ),
-                    // ),
+                   
                     const SizedBox(height: 22),
                     const Text(
                       'Connexion',
@@ -140,10 +127,10 @@ final _formKey = GlobalKey<FormState>();
                           ),
                         ),
                       ),
-                    //   validator: (value) {
-                    // if (value == null || value.trim().isEmpty) return 'email est requis';
-                    // return null;
-                  // },
+                      validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'email est requis';
+                    return null;
+                  },
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -183,10 +170,10 @@ final _formKey = GlobalKey<FormState>();
                           ),
                         ),
                       ),
-                  //     validator: (value) {
-                  //   if (value == null || value.trim().isEmpty) return 'password est requis';
-                  //   return null;
-                  // },
+                      validator: (value) {
+                    if (value == null || value.trim().isEmpty) return 'password est requis';
+                    return null;
+                  },
                     ),
                       ])),
                     
