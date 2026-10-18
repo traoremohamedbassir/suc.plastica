@@ -615,10 +615,16 @@ class _RecetteCalculState extends State<RecetteCalcul> {
           ),
           Padding(
             padding: const EdgeInsets.only(right: 8),
-            child: FilledButton.icon(
+            child: FilledButton(
               onPressed: _isSaving ? null : _saveInvoice,
-              icon: const Icon(Icons.save),
-              label: const Text('Enregistrer'),
+               child: _isSaving
+                        ? const SizedBox(
+                            width: 18,
+                            height: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+              // icon: const Icon(Icons.save),
+              : const Text('Enregistrer'),
             ),
           ),
         ],

@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:plastica_suc/view/shared/display_fields.dart';
 
 class CaisseDepense extends StatefulWidget {
   const CaisseDepense({super.key});
@@ -104,96 +105,140 @@ class _CaisseDepenseState extends State<CaisseDepense> {
                   return const Center(child: Text('pas de donnees'));
                 }
 
-                final rows = snapshot.data!.docs.map((doc) {
-                  return DataRow(
-                    selected: true,
-                    cells: [
-                      DataCell(Text(doc['categorie']?.toString() ?? '')),
-                      DataCell(Text(doc['designation']?.toString() ?? '')),
-                       DataCell(Text(doc['montant']?.toString() ?? '')),
-                      DataCell(Text(doc['date']?.toString() ?? '')),
-                      DataCell(
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () async {
-                                await _depense
-                                        .doc(doc.reference.id)
-                                        .delete();
-                                    //  
-                              },
-                              icon: Icon(Icons.delete, color: Colors.red),
-                            ),
-                            IconButton(
-                              onPressed: () =>  _updateDepense(doc),
-                              icon: Icon(Icons.edit, color: Colors.green),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList();
+                final entries = snapshot.data!.docs;
 
-                return SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: DataTable(
-                      columns: const [
-                         DataColumn(
-                          label: Text(
-                            'categorie',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                            ),
+                return ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: entries.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final doc = entries[index];
+                    final data = doc.data() as Map<String, dynamic>? ?? {};
+                    final values = depenseDisplayValues(data);
+
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.grey.shade200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            'designation',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                            ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  values['designation']?.isNotEmpty == true ? values['designation']! : 'Dépense',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF111827),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFEF2F2),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  values['categorie']?.isNotEmpty == true ? values['categorie']! : 'Catégorie',
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF991B1B),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            'montant',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                            ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _InfoChip(label: 'Montant', value: values['montant'] ?? '0 FCFA'),
+                              _InfoChip(label: 'Date', value: values['date'] ?? '—'),
+                            ],
                           ),
-                        ),
-                         DataColumn(
-                          label: Text(
-                            'date',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                            ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              IconButton(
+                                onPressed: () async {
+                                  await _depense.doc(doc.reference.id).delete();
+                                },
+                                icon: const Icon(Icons.delete, color: Colors.red),
+                              ),
+                              IconButton(
+                                onPressed: () => _updateDepense(doc),
+                                icon: const Icon(Icons.edit, color: Colors.green),
+                              ),
+                            ],
                           ),
-                        ),
-                        DataColumn(
-                          label: Text(
-                            'actions',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ),
-                      ],
-                      rows: rows,
-                    ),
-                  ),
+                        ],
+                      ),
+                    );
+                  },
                 );
               },
             ),
         ])
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _InfoChip({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 120),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value.isEmpty ? '—' : value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

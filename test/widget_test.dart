@@ -1,30 +1,38 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:plastica_suc/main.dart';
+import 'package:plastica_suc/view/shared/display_fields.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('stock display values expose all requested fields', () {
+    final data = {
+      'nom_produit': 'PVC',
+      'prix_achat': 800,
+      'quantite': 25,
+      'fournisseur': 'Plastique Plus',
+      'prix_vente': 1200,
+    };
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(stockDisplayValues(data), {
+      'nom_produit': 'PVC',
+      'prix_achat': '800 FCFA',
+      'quantite': '25',
+      'fournisseur': 'Plastique Plus',
+      'prix_vente': '1200 FCFA',
+    });
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+  test('recette display values resolve client, date, amount and payment system', () {
+    final data = {
+      'nom_clt': 'Jean Dupont',
+      'date': '18/10/2026',
+      'total_paye': 15000,
+      'systeme_paie': 'Mobile Money',
+    };
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(recetteDisplayValues(data), {
+      'nom_clt': 'Jean Dupont',
+      'date': '18/10/2026',
+      'total_paye': '15000 FCFA',
+      'systeme_paie': 'Mobile Money',
+    });
   });
 }

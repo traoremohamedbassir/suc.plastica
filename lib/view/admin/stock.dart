@@ -4,6 +4,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:plastica_suc/view/constants/drawer.dart';
+import 'package:plastica_suc/view/shared/display_fields.dart';
 import 'package:printing/printing.dart';
 
 class Stock extends StatefulWidget {
@@ -22,7 +23,6 @@ class _StockState extends State<Stock> {
   final CollectionReference _recettes = FirebaseFirestore.instance.collection(
     "recettes",
   );
-
   double _toDouble(dynamic value) {
     if (value is num) return value.toDouble();
     if (value is String) return double.tryParse(value.replaceAll(',', '.')) ?? 0;
@@ -365,11 +365,18 @@ class _StockState extends State<Stock> {
                                   fournisseur.contains(_searchQuery);
                             }).toList();
 
-                            return ListView(
-                              children: products.map((doc) {
+                            return ListView.separated(
+                              itemCount: products.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 12),
+                              itemBuilder: (context, index) {
+                                final doc = products[index];
                                 final data = doc.data() as Map<String, dynamic>? ?? {};
+                                final values = stockDisplayValues(data);
+                                final productName = values['nom_produit'] ?? '';
+                                final qtyText = values['quantite'] ?? '';
                                 final qty = _toDouble(data['quantite']);
                                 final isZero = qty == 0;
+
                                 return Slidable(
                                   startActionPane: ActionPane(
                                     motion: StretchMotion(),
@@ -380,49 +387,78 @@ class _StockState extends State<Stock> {
                                         icon: Icons.edit,
                                       ),
                                       SlidableAction(
-                                        onPressed: ((context) async {
-                                          await _stocks
-                                              .doc(doc.reference.id)
-                                              .delete();
-                                          //                               },
-                                        }),
+                                        onPressed: (context) async {
+                                          await _stocks.doc(doc.reference.id).delete();
+                                        },
                                         backgroundColor: Colors.red,
                                         icon: Icons.delete,
                                       ),
                                     ],
                                   ),
-                                  child: Card(
-                                    elevation: 20,
-                                    color: isZero ? Colors.red.withOpacity(0.08) : null,
-                                    child: ListTile(
-                                      title: Text(
-                                        data['nom_produit']?.toString() ?? '',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 15,
-                                          color: isZero ? Colors.red : null,
-                                        ),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: isZero ? Colors.red.withOpacity(0.06) : Colors.white,
+                                      borderRadius: BorderRadius.circular(18),
+                                      border: Border.all(
+                                        color: isZero ? Colors.red.shade200 : Colors.grey.shade200,
                                       ),
-                                      subtitle: Text(
-                                        data['quantite']?.toString() ?? '',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 15,
-                                          color: isZero ? Colors.red : null,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.04),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 4),
                                         ),
-                                      ),
-                                      trailing: Text(
-                                        data['prix_vente']?.toString() ?? '',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 15,
-                                          color: isZero ? Colors.red : null,
+                                      ],
+                                    ),
+                                    padding: const EdgeInsets.all(16),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                productName.isEmpty ? 'Produit' : productName,
+                                                style: TextStyle(
+                                                  fontSize: 17,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: isZero ? Colors.red.shade700 : Colors.black87,
+                                                ),
+                                              ),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                              decoration: BoxDecoration(
+                                                color: isZero ? Colors.red.shade100 : Colors.blue.shade50,
+                                                borderRadius: BorderRadius.circular(999),
+                                              ),
+                                              child: Text(
+                                                'Qté $qtyText',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w700,
+                                                  color: isZero ? Colors.red.shade700 : Colors.blue.shade700,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
+                                        const SizedBox(height: 14),
+                                        Wrap(
+                                          spacing: 10,
+                                          runSpacing: 10,
+                                          children: [
+                                            _DetailChip(label: 'Prix achat', value: values['prix_achat'] ?? ''),
+                                            _DetailChip(label: 'Fournisseur', value: values['fournisseur'] ?? ''),
+                                            _DetailChip(label: 'Prix vente', value: values['prix_vente'] ?? ''),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 );
-                              }).toList(),
+                              },
                             );
                           } else if (snapshot.connectionState ==
                               ConnectionState.waiting) {
@@ -653,6 +689,48 @@ final _formKey = GlobalKey<FormState>();
   }
 }
 // ////////////////////////////////////////////////
+class _DetailChip extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _DetailChip({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class StatCard extends StatelessWidget {
   final String title;
   final String value;

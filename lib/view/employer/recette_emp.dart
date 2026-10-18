@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:plastica_suc/view/admin/recette_calcul.dart';
+import 'package:plastica_suc/view/shared/display_fields.dart';
 
 
 class RecetteEmp extends StatefulWidget {
@@ -246,33 +247,71 @@ class _RecetteEmpState extends State<RecetteEmp> {
                   //   (sum, doc) => sum + _recipeProfit(doc.data() as Map<String, dynamic>),
                   // );
           
-                  final rows = todayRecettes.map((doc) {
-                    return DataRow(
-                      color: WidgetStateProperty.all(Colors.white),
-                      cells: [
-                        DataCell(
-                          Text(
-                            _safeStringValue(
-                              doc.data() as Map<String, dynamic>? ?? {},
-                              'date',
-                            ),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
+                  final recetteCards = todayRecettes.map((doc) {
+                    final data = doc.data() as Map<String, dynamic>? ?? {};
+                    final values = recetteDisplayValues(data);
+                    final clientName = values['nom_clt'] ?? '';
+                    final paymentSystem = values['systeme_paie'] ?? '';
+                    return Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: Colors.grey.shade200),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
                           ),
-                        ),
-                        DataCell(
-                          Text(
-                            doc['montant']?.toString() ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                        ),
-                        DataCell(
-                          Text(
-                            doc['paiement']?.toString() ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        DataCell(
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  clientName.isEmpty ? 'Client' : clientName,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF111827),
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFE0F2FE),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  paymentSystem.isEmpty ? 'Non défini' : paymentSystem,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _ReceiptField(label: 'Date', value: values['date'] ?? ''),
+                              _ReceiptField(label: 'Total payé', value: values['total_paye'] ?? ''),
+                              _ReceiptField(label: 'Système de paiement', value: paymentSystem),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               IconButton(
                                 onPressed: () async {
@@ -282,18 +321,15 @@ class _RecetteEmpState extends State<RecetteEmp> {
                               ),
                               IconButton(
                                 onPressed: () => _updateRecette(doc),
-                                icon: const Icon(
-                                  Icons.update,
-                                  color: Colors.green,
-                                ),
+                                icon: const Icon(Icons.update, color: Colors.green),
                               ),
                             ],
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     );
                   }).toList();
-          
+
                   return SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Column(
@@ -305,12 +341,6 @@ class _RecetteEmpState extends State<RecetteEmp> {
                           valeur: totalRecette.toStringAsFixed(0),
                           devise: 'FCFA',
                         ),
-                        const SizedBox(height: 12),
-                        // Header(
-                        //   tite: 'Bénéfice',
-                        //   valeur: benefice.toStringAsFixed(0),
-                        //   devise: 'FCFA',
-                        // ),
                         const SizedBox(height: 24),
                         const Text(
                           'Historique des paiements',
@@ -321,74 +351,20 @@ class _RecetteEmpState extends State<RecetteEmp> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10, right: 10),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                        if (recetteCards.isEmpty)
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.symmetric(vertical: 24),
+                              child: Text('Aucune recette pour aujourd’hui.'),
                             ),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: DataTable(
-                                columnSpacing: 28,
-                                headingRowColor: WidgetStateProperty.all(
-                                  const Color(0xFFF8FAFC),
-                                ),
-                                columns: const [
-                                  DataColumn(
-                                    label: Text(
-                                      'Date',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF374151),
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Total payé',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF374151),
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'Paiement',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF374151),
-                                      ),
-                                    ),
-                                  ),
-                                  DataColumn(
-                                    label: Text(
-                                      'actions',
-                                      style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w800,
-                                        color: Color(0xFF374151),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                                rows: rows,
-                              ),
-                            ),
+                          )
+                        else
+                          Column(
+                            children: recetteCards.map((card) => Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: card,
+                            )).toList(),
                           ),
-                        ),
                       ],
                     ),
                   );
@@ -397,6 +373,48 @@ class _RecetteEmpState extends State<RecetteEmp> {
             },
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ReceiptField extends StatelessWidget {
+  final String label;
+  final String value;
+
+  const _ReceiptField({required this.label, required this.value});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 120),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey.shade600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            value.isEmpty ? '—' : value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF111827),
+            ),
+          ),
+        ],
       ),
     );
   }
